@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- jquery cdn -->
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.24.0/axios.min.js"></script>
+    <!-- bootsrap cdn -->
+    <script language="javascript" src="js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <!-- bootsratp css -->
+    <link rel="stylesheet" href="/css/bootstrap.css" />
+    <!-- Font Awesome -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
+      rel="stylesheet"
+    />
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- MDB -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.10.1/mdb.min.css"
+      rel="stylesheet"
+    />
+    <!-- MDB -->
+    <!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.10.1/mdb.min.js"></script> -->
+    <title>Document</title>
+  </head>
+
+  <body>
+    <section class="vh-100" style="background-color: #e2d5de">
+      <div class="container py-5 h-100">
+        <div class="row d-flex justify-content-center align-items-center h-100">
+          <div class="col col-xl-10">
+            <div class="card" style="border-radius: 15px">
+              <div class="card-body p-5">
+                <h6 class="mb-3">My Todo List</h6>
+                <form
+                  class="d-flex justify-content-center align-items-center mb-4"
+                >
+                  <div class="form-outline flex-fill">
+                    <!-- Input需要抓取的地方 -->
+                    <input
+                      type="text"
+                      id="newTodo"
+                      class="form-control form-control-lg"
+                    />
+                    <label class="form-label">Add some news for today?</label>
+                  </div>
+                  <!-- 按鈕觸發POST method -->
+                  <button
+                    onclick="addTodos()"
+                    class="btn btn-primary btn-lg ms-2"
+                  >
+                    Add
+                  </button>
+                </form>
+                <!-- list-item擺放處 -->
+                <ul id="todo-item" class="list-group mb-0"></ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <script>
+      // Step 1: 取得資料庫中所有資料
+      $(document).ready(() => {
+        axios.get("/api/todo").then((res) => {
+          console.log(res.data);
+          // $(selector).append()
+          res.data.forEach((element) => {
+            $("#todo-item").append(`
+                <li class= "list-group-item d-flex justify-content-between align-items-center border-start-0 border-top-0 border-end-0 border-bottom rounded-0 mb-2" >
+                    <div class="d-flex align-items-center">
+                        <input id="todo-done-${element.id}" class="form-check-input me-2" type="checkbox"/>
+                        <span id="todo-title-${element.id}">${element.title}<span>
+                    </div>
+                    <a href="#" id="deleteTodo-${element.id}" data-mdb-toggle="tooltip" title="Remove item">
+                        <i class="fas fa-times text-primary"></i>
+                    </a>
+                </li>`);
+            // 設置屬性和值：$(selector).prop(property,value)
+            $(`#todo-done-${element.id}`).prop("checked", element.status); //取得資料庫中存的直，並將其設為該值
+            checkTodo(element.id, element.title);
+            // patch
+            $(`#todo-done-${element.id}`).on("click", () => {
+              const todo = {};
+              todo.status = $(`#todo-done-${element.id}`).prop("checked")
+                ? 1
+                : 0;
+              axios.patch(`/api/todo/${element.id}`, todo).then((res) => {
+                if (res.status === 200) {
+                  console.log(res.data);
+                }
+              });
+              checkTodo(element.id, element.title);
+            });
+
+            // delete
+            $(`#deleteTodo-${element.id}`).on("click", () => {
+              axios.delete(`/api/todo/${element.id}`).then((res) => {
+                if (res.status === 204) {
+                  location.reload();
+                } else {
+                  console.log(res);
+                }
+              });
+            });
+          });
+        });
+      });
+      // Step 2: 新增資料後refresh畫面 or append資料到畫面中
+      function addTodos() {
+        const todo = {};
+        todo.title = $("#newTodo").val();
+        axios.post("/api/todo", todo).then((res) => {
+          if (res.status === 201) {
+            location.reload();
+          } else {
+            console.log(res.data.message);
+          }
+        });
+      }
+      // Step 3: 完成清單要劃掉清單項目
+      function checkTodo(id, title) {
+        if ($(`#todo-done-${id}`).prop("checked")) {
+          $(`#todo-title-${id}`).html(`<s>${title}</s>`);
+        } else {
+          $(`#todo-title-${id}`).html(`${title}`);
+        }
+      }
+    </script>
+  </body>
+</html>
