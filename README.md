@@ -5,11 +5,11 @@
 # Getting started
 - Clone the repository
 ```
-git clone  <git lab template url> <project_name>
+git clone https://github.com/hooroobaby/todoListMySQL.git
 ```
 - Install dependencies
 ```
-cd <todoListMySQL>
+cd <projectname>
 npm install
 ```
 - Build and run the project
